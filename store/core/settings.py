@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 
 import dotenv
@@ -10,10 +11,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("SECRET_KEY", default="django-insecure-vvj8cr5bfy7p)zb!_p2f&$l&385mim5)m^s-ceqvvz7oq*3-@o")
 
+ALLOWED_HOSTS = [*os.getenv("ALLOWED_HOSTS", default="127.0.0.1").split(",")]
 
 DEBUG = os.environ.get("DJANGO_DEBUG", "") != "False"
-
-ALLOWED_HOSTS = [*os.getenv("ALLOWED_HOSTS", default="127.0.0.1").split(",")]
 
 
 # Application definition
@@ -24,6 +24,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
+    "rest_framework",
+    "rest_framework_simplejwt",
+
+    "store",
+    "customers",
 ]
 
 MIDDLEWARE = [
@@ -98,3 +104,19 @@ STATIC_URL = "static/"
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+AUTH_USER_MODEL = "customers.Customer"
+
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ]
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "SIGNING_KEY": os.getenv("SECRET_KEY", "django-insecure-vvj8cr5bfy7p)zb!_p2f&$l&385mim5)m^s-ceqvvz7oq*3-@o"),
+}

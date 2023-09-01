@@ -3,8 +3,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
-class Customer(get_user_model()):
-    pass
+Customer = get_user_model()
 
 
 class Book(models.Model):
@@ -14,6 +13,13 @@ class Book(models.Model):
     id_warehouse = models.IntegerField()
 
 
+class OrderItem(models.Model):
+    quantity = models.IntegerField()
+
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+
+
 class Order(models.Model):
     class OrderStatus(models.TextChoices):
         CART = "CART", _("Cart")
@@ -21,12 +27,14 @@ class Order(models.Model):
         SUCCESS = "SUCCESS", _("Success")
         FAILED = "FAILED", _("Failed")
 
-    user_id = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     status = models.CharField(max_length=7, choices=OrderStatus.choices, default=OrderStatus.CART)
     delivery_address = models.CharField(max_length=255)
 
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    order_item = models.ForeignKey(OrderItem, on_delete=models.CASCADE)
 
-class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    book = models.ForeignKey(Book, on_delete=models.CASCADE)
-    quantity = models.IntegerField()
+    class Meta:
+        unique_together = ["customer", "order_item"]
+
+
+

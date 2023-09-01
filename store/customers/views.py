@@ -1,5 +1,4 @@
-from django.contrib.auth import authenticate
-from rest_framework import generics, serializers, status
+from rest_framework import generics, status
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -9,7 +8,7 @@ from .serializers import CustomerSerializer, RegisterSerializer, CustomerLoginSe
 
 
 class RegisterApi(generics.GenericAPIView):
-    permission_classes = [AllowAny, ]
+    permission_classes = (AllowAny,)
     serializer_class = RegisterSerializer
 
     def post(self, request, *args, **kwargs):
@@ -52,5 +51,5 @@ class CustomerLogoutAPIView(GenericAPIView):
             token.blacklist()
             return Response(status=status.HTTP_205_RESET_CONTENT)
 
-        except Exception as e:
+        except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)

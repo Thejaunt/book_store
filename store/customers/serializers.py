@@ -7,7 +7,11 @@ User = get_user_model()
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("email", "username", "password", )
+        fields = (
+            "email",
+            "username",
+            "password",
+        )
 
     def create(self, validated_data):
         user = get_user_model().objects.create_user(
@@ -33,4 +37,8 @@ class CustomerLoginSerializer(serializers.Serializer):
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("id", "username", "email", )
+        fields = (
+            "id",
+            "username",
+            "email",
+        )

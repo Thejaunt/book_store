@@ -35,6 +35,3 @@ class Order(models.Model):
 
     class Meta:
         unique_together = ["customer", "order_item"]
-
-
-

@@ -4,7 +4,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import CustomerSerializer, RegisterSerializer, CustomerLoginSerializer
+from .serializers import CustomerSerializer, RegisterSerializer, CustomerLoginSerializer, LogoutSerializer
 
 
 class RegisterApi(generics.GenericAPIView):
@@ -43,6 +43,7 @@ class CustomerLoginAPIView(GenericAPIView):
 
 class CustomerLogoutAPIView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
+    serializer_class = LogoutSerializer
 
     def post(self, request, *args, **kwargs):
         try:
@@ -53,3 +54,6 @@ class CustomerLogoutAPIView(GenericAPIView):
 
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def get_serializer_class(self):
+        return self.serializer_class

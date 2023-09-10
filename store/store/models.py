@@ -14,6 +14,16 @@ class Book(models.Model):
     quantity = models.PositiveIntegerField(default=0)
     id_warehouse = models.IntegerField()
 
+    objects = models.Manager()
+
+    def __str__(self):
+        return f"{self.title}"
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+
+        return reverse("book-detail", kwargs={"pk": self.pk})
+
 
 class OrderItem(models.Model):
     quantity = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
@@ -22,30 +32,36 @@ class OrderItem(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     order = models.ForeignKey("Order", on_delete=models.CASCADE)
 
+    objects = models.Manager()
+
+    def __str__(self):
+        return f"ITEM: {self.book.title}, CUSTOMER: {self.customer}, STATUS: {self.order.status} "
+
     def total_price(self):
         total = self.book.price * self.quantity
-        return float(total)
-
-
-class OrderStatus(models.TextChoices):
-    CART = "CART", _("Cart")
-    ORDERED = "ORDERED", _("Ordered")
-    SUCCESS = "SUCCESS", _("Success")
-    FAILED = "FAILED", _("Failed")
+        return round(float(total), 2)
 
 
 class Order(models.Model):
+    class OrderStatus(models.TextChoices):
+        CART = "CART", _("Cart")
+        ORDERED = "ORDERED", _("Ordered")
+        SUCCESS = "SUCCESS", _("Success")
+        FAILED = "FAILED", _("Failed")
+
     status = models.CharField(max_length=7, choices=OrderStatus.choices, default=OrderStatus.CART)
     delivery_address = models.CharField(max_length=255)
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+
+    objects = models.Manager()
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
                 fields=["customer", "status"],
                 name="unique_cart_per_customer",
-                condition=Q(status=OrderStatus.CART),
+                condition=Q(status="CART"),
             )
         ]
 
@@ -53,4 +69,4 @@ class Order(models.Model):
         total = float()
         for item in self.orderitem_set.all():
             total += item.total_price()
-        return total
+        return round(float(total), 2)

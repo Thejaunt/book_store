@@ -5,13 +5,11 @@ User = get_user_model()
 
 
 class RegisterSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(required=True)
+
     class Meta:
         model = User
-        fields = (
-            "email",
-            "username",
-            "password",
-        )
+        fields = ["email", "username", "password"]
 
     def create(self, validated_data):
         user = get_user_model().objects.create_user(
@@ -42,3 +40,7 @@ class CustomerSerializer(serializers.ModelSerializer):
             "username",
             "email",
         )
+
+
+class LogoutSerializer(serializers.Serializer):
+    pass

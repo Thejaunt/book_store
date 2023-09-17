@@ -14,7 +14,7 @@ ALLOWED_HOSTS = [*os.getenv("ALLOWED_HOSTS", default="127.0.0.2").split(",")]
 
 DEBUG = os.environ.get("DJANGO_DEBUG", "") != "False"
 
-
+# fmt: off
 # Application definition
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -28,6 +28,8 @@ INSTALLED_APPS = [
 
     "management",
 ]
+# fmt: on
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

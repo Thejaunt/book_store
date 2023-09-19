@@ -1,6 +1,11 @@
 from django.urls import path
 
-from .views import BookListView, BookDetailView, CartView, OrderItemView
+from .views import (
+    BookListView,
+    BookDetailView,
+    CartView,
+    OrderItemView,
+)
 
 urlpatterns = [
     path("books/", BookListView.as_view()),

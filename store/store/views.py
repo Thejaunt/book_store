@@ -1,18 +1,29 @@
 from django.db import transaction
 from rest_framework import generics, viewsets, status
 from rest_framework import permissions
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework_simplejwt import authentication
 
 from .models import Book, Order, OrderItem
 from .perms import ReadOnly, IsOrderItemOwnerPermission, IsOrderItemInCart
+from .tasks import send_new_order, db_update
 from .serializers import (
     BookListSerializer,
     BookDetailSerializer,
     OrderSerializer,
     OrderItemSerializer,
     MakeOrderSerializer,
+    DeliverySerializer,
 )
+
+
+# @api_view(["GET"])
+# def db_up(request):
+#     print(request)
+#     # db_update.apply_async(args=[])
+#     db_update.apply_async(agrs=[])
+#     return Response("GOOD")
 
 
 class BookListView(generics.ListAPIView):
@@ -28,6 +39,7 @@ class BookDetailView(generics.RetrieveAPIView, generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         """Adding a book into the Cart"""
         obj = self.get_object()
+
         order_instance, created = Order.objects.get_or_create(customer=request.user, status="CART")
 
         order_items = [oi for oi in order_instance.orderitem_set.all()]
@@ -79,6 +91,14 @@ class CartView(viewsets.ModelViewSet):
         except Order.DoesNotExist:
             return Response("CART is empty")
 
+        delivery_serializer = DeliverySerializer(data=request.data)
+        delivery_serializer.is_valid(raise_exception=True)
+        instance.delivery_address = delivery_serializer.validated_data.get("delivery_address")
+        instance.save()
+
+        if not instance.delivery_address:
+            return Response("delivery address is required")
+
         with transaction.atomic():
             books = []
             for item in items:
@@ -95,7 +115,19 @@ class CartView(viewsets.ModelViewSet):
             instance.save()
             #  SEND INSTANCE TO OTHER SERVICE
 
-        return Response("serializer.data")
+            data = {
+                "customer_email": instance.customer.email,
+                "customer_store_id": instance.customer.id,
+                "order_id": instance.id,
+                "order_delivery_address": instance.delivery_address,
+                "order_items": []
+            }
+            for oi in instance.orderitem_set.all():
+                data["order_items"].append({"book_warehouse_id": oi.book.id_warehouse, "qty": oi.quantity})
+
+            send_new_order.apply_async(args=[data])
+
+        return Response("All Good ")
 
 
 class OrderItemView(generics.RetrieveUpdateDestroyAPIView):

@@ -3,6 +3,13 @@ from rest_framework import serializers
 from .models import Book, Order, OrderItem
 
 
+class WarehouseSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    title = serializers.CharField()
+    price = serializers.DecimalField(max_digits=5, decimal_places=2)
+    quantity = serializers.IntegerField()
+
+
 class BookListSerializer(serializers.ModelSerializer):
     url = serializers.CharField(source="get_absolute_url", read_only=True)
 
@@ -63,7 +70,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "orderitem_set",
             "delivery_address",
         ]
-        read_only_fields = ["status", "customer", "delivery_address"]
+        read_only_fields = ["status", "customer"]
 
     def update(self, instance, validated_data):
         quantity = validated_data.get("quantity")
@@ -78,3 +85,7 @@ class MakeOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ["id", "orderitem_set", "delivery_address"]
+
+
+class DeliverySerializer(serializers.Serializer):
+    delivery_address = serializers.CharField(max_length=255, required=True)

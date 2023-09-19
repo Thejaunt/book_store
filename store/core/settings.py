@@ -3,6 +3,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import dotenv
+from corsheaders.defaults import default_headers
 
 dotenv.read_dotenv()
 
@@ -30,22 +31,26 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
 
     "django_extensions",
+    "django_celery_beat",
 
     "store",
     "customers",
 ]
-# fmt: on
 
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+
+    "corsheaders.middleware.CorsMiddleware",
+
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+# fmt: on
 
 ROOT_URLCONF = "core.urls"
 
@@ -143,3 +148,31 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_LIFETIME": timedelta(minutes=5),
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
 }
+
+
+CORS_ALLOWED_ORIGINS = ["http://127.0.0.1:8002", "http://localhost:8002"]
+CORS_ALLOW_METHODS = ("GET", "POST",)
+CORS_ALLOW_HEADERS = (*default_headers,)
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://0.0.0.0:8002",
+    "http://localhost:8002",
+]
+
+#  Redis cache
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://localhost:6379/1",
+    }
+}
+
+
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 60 * 60 * 24 * 2  # 2 days
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", default="amqp://guest:guest@localhost:5672")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", default="redis://localhost:6379")
+CELERY_ACCEPT_CONTENT = ["application/json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"

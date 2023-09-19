@@ -7,8 +7,7 @@ from django.utils.translation import gettext_lazy as _
 class Customer(models.Model):
     name = models.CharField(max_length=150, default="None")
     email = models.EmailField(unique=True)
-    store_id = models.IntegerField()
-    delivery_address = models.CharField(max_length=250)
+    delivery_address = models.CharField(max_length=250, default="None")
 
     def __str__(self):
         return f"Customer: {self.name}, Email: {self.email}"

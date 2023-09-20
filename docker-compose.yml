@@ -1,0 +1,104 @@
+version: "3.11"
+
+services:
+
+  store:
+    build:
+      context: .
+      dockerfile: docker/store/Dockerfile
+    image: store:0.0.1-dev
+    container_name: store
+    command: bash docker/runserver.sh
+    environment:
+      - DB_HOST=store_db
+      - DB_PORT=5432
+    env_file:
+      - config/.env/store.env
+    depends_on:
+      - store_db
+    expose:
+      - 8000
+    networks:
+      - store_db_network
+      - nginx_network
+    volumes:
+      - ./store:/home/appuser/app
+
+  warehouse:
+    build:
+      context: .
+      dockerfile: docker/warehouse/Dockerfile
+    image: warehouse:0.0.1-dev
+    container_name: warehouse
+    command: bash docker/runserver.sh
+    environment:
+      - DB_HOST=warehouse_db
+      - DB_PORT=5433
+    env_file:
+      - config/.env/warehouse.env
+    depends_on:
+      - warehouse_db
+    expose:
+      - 8002
+    networks:
+      - warehouse_db_network
+      - nginx_network
+    volumes:
+      - ./warehouse:/home/appuser/app
+
+  store_db:
+    container_name: store_db
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=store_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - store-db-data:/var/lib/postgresql/data
+    expose:
+      - 5432
+    networks:
+      - store_db_network
+
+  warehouse_db:
+    container_name: warehouse_db
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=warehouse_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - warehouse-db-data:/var/lib/postgresql/data
+    expose:
+      - 5433
+    networks:
+      - warehouse_db_network
+
+  nginx:
+    container_name: nginx
+    build:
+      context: .
+      dockerfile: ./docker/nginx/Dockerfile
+    restart: on-failure
+    networks:
+      - nginx_network
+    ports:
+      - 80:80
+      - 8002:8002
+    depends_on:
+      - store
+      - warehouse
+    healthcheck:
+      test: [ "CMD-SHELL", "ps ax", "|" ,"grep -v grep", "|" ,"grep nginx",  "||", "exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  store_db_network:
+  warehouse_db_network:
+  nginx_network:
+
+volumes:
+  store-db-data:
+  warehouse-db-data:

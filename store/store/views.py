@@ -18,14 +18,6 @@ from .serializers import (
 )
 
 
-# @api_view(["GET"])
-# def db_up(request):
-#     print(request)
-#     # db_update.apply_async(args=[])
-#     db_update.apply_async(agrs=[])
-#     return Response("GOOD")
-
-
 class BookListView(generics.ListAPIView):
     queryset = Book.objects.all()
     serializer_class = BookListSerializer

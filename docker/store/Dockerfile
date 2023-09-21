@@ -25,11 +25,10 @@ COPY ./store /home/appuser/app
 COPY ./docker/store /home/appuser/app/docker
 
 WORKDIR /home/appuser/app
-
 RUN chmod +x docker/runserver.sh docker/wait-for-command.sh docker/docker-entrypoint.sh
 
 EXPOSE 8000
 
-# the one below doen't wanna work
-ENTRYPOINT ["/usr/bin/env", "/docker/docker-entrypoint.sh"]
+
+ENTRYPOINT ["/bin/bash", "/home/appuser/app/docker/docker-entrypoint.sh"]
 CMD ["python", "manage.py", "runserver"]

@@ -52,7 +52,9 @@ ROOT_URLCONF = "core.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [
+            "core/templates",
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -75,8 +77,9 @@ DATABASES = {
         "NAME": os.getenv("DB_NAME"),
         "USER": os.getenv("DB_USER"),
         "PASSWORD": os.getenv("DB_PASSWORD"),
-        "HOST": os.getenv("DB_HOST"),
-        "PORT": os.getenv("DB_PORT"),
+        "HOST": os.getenv("DB2_HOST"),
+        "PORT": os.getenv("DB2_PORT"),
+        # "PORT": 5432,
     }
 }
 
@@ -110,9 +113,17 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+    ]
+}
 
 
 CORS_ALLOWED_ORIGINS = ("http://127.0.0.1:8000", "http://localhost:8000",)
@@ -120,7 +131,7 @@ CORS_ALLOW_METHODS = ("GET", "POST",)
 CORS_ALLOW_HEADERS = (*default_headers,)
 
 
-CSRF_TRUSTED_ORIGINS = ("http://127.0.0.1:8000", "http://localhost:8000",)
+CSRF_TRUSTED_ORIGINS = ("http://127.0.0.1:8000", "http://localhost:8000", "http://localhost:8002")
 
 #  Redis cache
 CACHES = {
@@ -138,3 +149,7 @@ CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", default="redis://loca
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
+
+DJANGO_SUPERUSER_PASSWORD = os.getenv("DJANGO_SUPERUSER_PASSWORD", "qwe123QWE!@#")
+DJANGO_SUPERUSER_EMAIL = "test@test.com"
+DJANGO_SUPERUSER_USERNAME = "admin"

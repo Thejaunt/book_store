@@ -2,51 +2,46 @@ version: "3.11"
 
 services:
 
-  store:
+  store: &store
+    container_name: store
     build:
       context: .
       dockerfile: docker/store/Dockerfile
-    image: store:0.0.1-dev
-    container_name: store
     command: bash docker/runserver.sh
     environment:
       - DB_HOST=store_db
       - DB_PORT=5432
     env_file:
       - config/.env/store.env
-    depends_on:
-      - store_db
-    expose:
-      - 8000
     networks:
       - store_db_network
       - nginx_network
-    volumes:
-      - ./store:/home/appuser/app
+    expose:
+      - 8000
+    depends_on:
+      - store_db
 
-  warehouse:
+  warehouse: &warehouse
+    container_name: warehouse
     build:
       context: .
       dockerfile: docker/warehouse/Dockerfile
-    image: warehouse:0.0.1-dev
-    container_name: warehouse
     command: bash docker/runserver.sh
     environment:
-      - DB_HOST=warehouse_db
-      - DB_PORT=5433
+      - DB2_HOST=warehouse_db
+      - DB2_PORT=5432
     env_file:
       - config/.env/warehouse.env
-    depends_on:
-      - warehouse_db
-    expose:
-      - 8002
     networks:
       - warehouse_db_network
       - nginx_network
-    volumes:
-      - ./warehouse:/home/appuser/app
+    expose:
+      - 8002
+    depends_on:
+      - warehouse_db
 
-  store_db:
+
+  store_db: &store_db
     container_name: store_db
     image: postgres:15-alpine
     environment:
@@ -64,13 +59,13 @@ services:
     container_name: warehouse_db
     image: postgres:15-alpine
     environment:
-      - POSTGRES_DB=warehouse_db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - DB_NAME=warehouse_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
     volumes:
       - warehouse-db-data:/var/lib/postgresql/data
     expose:
-      - 5433
+      - 5432
     networks:
       - warehouse_db_network
 
@@ -83,8 +78,8 @@ services:
     networks:
       - nginx_network
     ports:
-      - 80:80
-      - 8002:8002
+      - "8000:8000"
+      - "8002:8002"
     depends_on:
       - store
       - warehouse
@@ -93,6 +88,61 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+  redis:
+    container_name: book_store_redis
+    image: redis:5.0.6-alpine
+    restart: on-failure
+    networks:
+      - store_db_network
+      - warehouse_db_network
+    expose:
+      - 6379
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-h", "localhost", "ping" ]
+
+  rabbitmq:
+    container_name: book_store_rabbitmq
+    image: rabbitmq:3.8.0-alpine
+    restart: on-failure
+    networks:
+      - store_db_network
+    expose:
+      - 5672
+      - 15672
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "5672"]
+      interval: 5s
+      timeout: 15s
+      retries: 1
+
+  celery:
+    <<: *store
+    container_name: book_store_celery
+    restart: on-failure
+    depends_on:
+      - rabbitmq
+    expose: []
+    networks:
+      - store_db_network
+    environment:
+      C_FORCE_ROOT: "true"
+      CHECK_WEB: "true"
+      DB_URL: "postgresql://postgres:postgres@db:5432"
+      DB_HOST: "store_db"
+      DB_PORT: "5432"
+      REDIS_URL: "redis://redis:6379/0"
+      CELERY_BROKER_URL: "amqp://guest:guest@localhost:15691"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+      REDIS_CACHE: 'redis:6379'
+      AMQP_URL: "amqp://rabbitmq:5672"
+#      WEB_HOST: "store"
+#      WEB_PORT: "8000"
+    healthcheck:
+      test: ["CMD-SHELL", "ps ax", "|" ,"grep -v grep", "|" ,"grep celery",  "||", "exit 1"]
+      interval: 1m
+      timeout: 5s
+      retries: 2
 
 networks:
   store_db_network:

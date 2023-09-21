@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash sh
 
 set -o errexit
 
@@ -6,7 +6,7 @@ cmd="$*"
 
 postgres_ready () {
   # Check that postgres is ready:
-  sh 'docker/wait-for-command.sh' -t 5 -s 0 52 -c "curl $DB_HOST:$DB_PORT"
+  sh 'docker/wait-for-command.sh' -t 5 -s 0 52 -c "curl $DB2_HOST:$DB2_PORT"
 }
 
 # We need this line to make sure that this container is started

@@ -117,6 +117,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -161,6 +162,7 @@ CORS_ALLOW_HEADERS = (*default_headers,)
 CSRF_TRUSTED_ORIGINS = [
     "http://0.0.0.0:8002",
     "http://localhost:8002",
+    "http://localhost:8000",
 ]
 
 #  Redis cache
@@ -175,8 +177,8 @@ CACHES = {
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 60 * 60 * 24 * 2  # 2 days
-CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", default="amqp://guest:guest@localhost:5672")
-CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", default="redis://localhost:6379")
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", default="amqp://guest:guest@localhost:15691")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", default="redis://0.0.0.0:6379/0")
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
@@ -184,3 +186,7 @@ CELERY_RESULT_SERIALIZER = "json"
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "localhost"
 EMAIL_PORT = "1025"
+
+DJANGO_SUPERUSER_PASSWORD = os.getenv("DJANGO_SUPERUSER_PASSWORD", "qwe123QWE!@#")
+DJANGO_SUPERUSER_EMAIL = "test@test.com"
+DJANGO_SUPERUSER_USERNAME = "admin"
